@@ -17,6 +17,9 @@ public class Producer implements Runnable {
         Random rng = new Random();
         while (true) {
             try {
+                String str = "random string " + rng.nextInt(1000);
+                System.out.printf("[%s]: pushed string \"%s\"%n", Thread.currentThread().getName(), str);
+                Q.push(str);
                 Thread.sleep(rng.nextInt(500, 2500));
             } catch (Exception e) {
                 return;

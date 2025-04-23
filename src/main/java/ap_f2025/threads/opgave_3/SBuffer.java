@@ -12,11 +12,15 @@ public class SBuffer {
         Q = new String[cap];
     }
 
-    public int getSize() {
+    public synchronized int getSize() {
         return (head - tail + cap) % cap;
     }
 
-    public void push(String str) {
+    public float getLoad() {
+        return (float) getSize() / cap;
+    }
+
+    public synchronized void push(String str) {
         if (getSize() + 1 >= cap) {
             String[] old = Q;
             int sz = getSize();
@@ -31,11 +35,12 @@ public class SBuffer {
         }
         Q[head] = str;
         head = (head + 1) % cap;
+        notifyAll();
     }
 
-    public String pop() {
-        if (getSize() <= 0) {
-            return null;
+    public synchronized String pop() throws InterruptedException {
+        while (getSize() <= 0) {
+            wait();
         }
         String str = Q[tail];
         Q[tail] = null;
@@ -43,7 +48,7 @@ public class SBuffer {
         return str;
     }
 
-    public void print() {
+    public synchronized void print() {
         System.out.printf("SBuffer(size: %d/%d)%n", getSize(), cap);
         for (int i = 0; i < cap; i++) {
             if (i == head && i == tail) {
