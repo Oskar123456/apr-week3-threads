@@ -53,6 +53,13 @@ public class Main {
                 sbuffer.print();
             } catch (Exception e) {
                 System.out.printf("[Main]: Exiting...%n");
+                for (Thread thread : consumers) {
+                    try {
+                        thread.interrupt();
+                        thread.join();
+                    } catch (Exception ex) {
+                    }
+                }
                 return;
             }
         }

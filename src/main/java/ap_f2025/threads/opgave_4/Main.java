@@ -3,6 +3,9 @@ package ap_f2025.threads.opgave_4;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Main
@@ -16,43 +19,47 @@ public class Main {
         SBuffer sbuffer = new SBuffer();
         sbuffer.print();
 
-        List<Thread> producers = new ArrayList<>();
-        List<Thread> consumers = new ArrayList<>();
+        int nProducers = rng.nextInt(1, 4);
+        ExecutorService producers = Executors.newFixedThreadPool(nProducers);
+        ExecutorService consumers = Executors.newFixedThreadPool(4);
 
-        int nProducers = rng.nextInt(2, 5);
         for (int i = 0; i < nProducers; i++) {
             Thread t = new Thread(new Producer(sbuffer), "Producer " + producerId++);
             t.start();
-            producers.add(t);
+            producers.submit(t);
         }
 
-        System.out.printf("[Main]: Added %d producers...%n", producers.size());
+        System.out.printf("[Main]: Added %d producers...%n", nProducers);
 
         while (true) {
             try {
                 Thread.sleep(5000);
                 int sbufferSize = sbuffer.getSize();
                 float sbufferLoad = sbuffer.getLoad();
-                System.out.printf(
-                        "[Main]: sbuffer's size and load is currently %d and %f... there are %d producers and %d consumers...",
-                        sbufferSize, sbufferLoad, producers.size(), consumers.size());
+                System.out.printf("[Main]: sbuffer's size and load is currently %d and %f...", sbufferSize,
+                        sbufferLoad);
                 if (sbufferSize > 8) {
-                    System.out.printf(" adding a consumer to keep with producers...%n");
-                    Thread t = new Thread(new Consumer(sbuffer), "Consumer " + consumerId++);
-                    t.start();
-                    consumers.add(t);
+                    System.out.printf(" adding consumers to keep with producers...%n");
+                    for (int i = 0; i < sbufferSize; i++) {
+                        Thread t = new Thread(new Consumer(sbuffer), "Consumer " + consumerId++);
+                        t.start();
+                        consumers.submit(t);
+                    }
                 } else if (sbufferSize < 1) {
-                    System.out.printf(" removing a consumer as there is no work...%n");
-                    Thread t = consumers.getLast();
-                    t.interrupt();
-                    t.join();
-                    consumers.removeLast();
+                    System.out.printf(" there is no work...%n");
                 } else {
                     System.out.printf(" going back to sleep...%n");
                 }
                 sbuffer.print();
             } catch (Exception e) {
                 System.out.printf("[Main]: Exiting...%n");
+                try {
+                    producers.shutdownNow();
+                    producers.awaitTermination(10, TimeUnit.SECONDS);
+                    consumers.shutdownNow();
+                    consumers.awaitTermination(10, TimeUnit.SECONDS);
+                } catch (Exception ex) {
+                }
                 return;
             }
         }
