@@ -1,7 +1,5 @@
 package ap_f2025.threads.opgave_4;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
