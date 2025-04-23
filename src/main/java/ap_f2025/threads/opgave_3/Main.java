@@ -42,11 +42,13 @@ public class Main {
                     t.start();
                     consumers.add(t);
                 } else if (sbufferSize < 1) {
-                    System.out.printf(" removing a consumer as there is no work...%n");
-                    Thread t = consumers.getLast();
-                    t.interrupt();
-                    t.join();
-                    consumers.removeLast();
+                    System.out.printf(" removing consumers as there is no work...%n");
+                    for (int i = 0; i < consumers.size(); i++) {
+                        Thread t = consumers.getLast();
+                        t.interrupt();
+                        t.join();
+                        consumers.removeLast();
+                    }
                 } else {
                     System.out.printf(" going back to sleep...%n");
                 }
